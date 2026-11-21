@@ -1,0 +1,8 @@
+.env
+__pycache__/
+.venv/
+evals/results/
+data/raw/*
+!data/raw/.gitkeep
+# the sample PDFs are fictional test documents, safe to commit
+!data/raw/0*.pdf
