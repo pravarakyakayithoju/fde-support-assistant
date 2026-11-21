@@ -12,7 +12,7 @@ The included data is a **fictional** college admissions office ("Northfield Inst
 
 | Metric | Score |
 |---|---|
-| Answer accuracy | 80% |
+| Answer accuracy | 86.7% (26/30) |
 | Hallucination rate | 0% |
 | Citation rate | 100% |
 | Tool-selection accuracy | 100% |
@@ -31,7 +31,15 @@ Retrieval traces showed that the first chunk of every PDF (document header + boi
 - **Hybrid search:** pgvector similarity + Postgres full-text search, merged with reciprocal rank fusion (RRF).
 - The 0% citation rate was a format mismatch (the model cited as `【1】`); answers are now normalised to `[1]`.
 
-The remaining failures were answers that omitted a condition (e.g. "single rooms only from second year"), traced to a "be concise" instruction in the system prompt.
+On the full set, accuracy went from 80% to 86.7% after replacing a "be concise" instruction with "complete but brief: include every amount, condition or exception that affects the answer".
+
+### Known failure modes (latest run)
+Retrieval found the right passage in every remaining failure; the misses are in answer generation:
+- **Omitted conditions** (q06, q16): the answer gives the main fact but drops a qualifying rule present in a retrieved passage, e.g. "single rooms only from second year".
+- **Under-reporting tool results** (q30): the email was sent with the right content, but the reply didn't say what it contained.
+- **Strict expectation** (q28): the answer correctly says the fee is paid but doesn't add the admission status the test expects.
+
+These were not tuned further on purpose: with 30 questions, more prompt tweaks risk overfitting the eval set. Next step is a larger eval set before changing the prompt again.
 
 ## How it works
 
@@ -83,5 +91,6 @@ Switch providers in `.env`: `LLM_PROVIDER=groq|gemini`, `EMBED_PROVIDER=local|ge
 
 - [ ] Deploy on Google Cloud (Cloud Run + Cloud SQL)
 - [ ] Small React chat UI
-- [ ] Reduce latency (p50 ≈ 11 s on the full set, mostly multi-step tool questions)
+- [ ] Reduce latency (p50 ≈ 12.7 s on the full set, mostly multi-step tool questions)
+- [ ] Grow the eval set and add a completeness check for answers
 - [ ] Real email sending; auth
